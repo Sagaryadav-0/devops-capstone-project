@@ -14,7 +14,8 @@ from service.models import db, Account, init_db
 from service.routes import app
 
 DATABASE_URI = os.getenv(
-    "DATABASE_URI", "postgresql://postgres:postgres@localhost:5432/postgres"
+    "DATABASE_URI",
+    "postgresql://postgres:postgres@localhost:5432/postgres",
 )
 
 BASE_URL = "/accounts"
@@ -41,9 +42,8 @@ class TestAccountService(TestCase):
 
     def setUp(self):
         """Runs before each test"""
-        db.session.query(Account).delete()  # clean up the last tests
+        db.session.query(Account).delete()
         db.session.commit()
-
         self.client = app.test_client()
 
     def tearDown(self):
@@ -53,13 +53,15 @@ class TestAccountService(TestCase):
     ######################################################################
     #  H E L P E R   M E T H O D S
     ######################################################################
-
     def _create_accounts(self, count):
         """Factory method to create accounts in bulk"""
         accounts = []
         for _ in range(count):
             account = AccountFactory()
-            response = self.client.post(BASE_URL, json=account.serialize())
+            response = self.client.post(
+                BASE_URL,
+                json=account.serialize(),
+            )
             self.assertEqual(
                 response.status_code,
                 status.HTTP_201_CREATED,
@@ -73,7 +75,6 @@ class TestAccountService(TestCase):
     ######################################################################
     #  A C C O U N T   T E S T   C A S E S
     ######################################################################
-
     def test_index(self):
         """It should get 200_OK from the Home Page"""
         response = self.client.get("/")
@@ -82,7 +83,7 @@ class TestAccountService(TestCase):
     def test_health(self):
         """It should be healthy"""
         resp = self.client.get("/health")
-        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
         data = resp.get_json()
         self.assertEqual(data["status"], "OK")
 
@@ -92,35 +93,51 @@ class TestAccountService(TestCase):
         response = self.client.post(
             BASE_URL,
             json=account.serialize(),
-            content_type="application/json"
+            content_type="application/json",
         )
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_201_CREATED,
+        )
 
-        # Make sure location header is set
-        location = response.headers.get("Location", None)
+        location = response.headers.get("Location")
         self.assertIsNotNone(location)
 
-        # Check the data is correct
         new_account = response.get_json()
         self.assertEqual(new_account["name"], account.name)
         self.assertEqual(new_account["email"], account.email)
         self.assertEqual(new_account["address"], account.address)
-        self.assertEqual(new_account["phone_number"], account.phone_number)
-        self.assertEqual(new_account["date_joined"], str(account.date_joined))
+        self.assertEqual(
+            new_account["phone_number"],
+            account.phone_number,
+        )
+        self.assertEqual(
+            new_account["date_joined"],
+            str(account.date_joined),
+        )
 
     def test_bad_request(self):
-        """It should not Create an Account when sending the wrong data"""
-        response = self.client.post(BASE_URL, json={"name": "not enough data"})
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        """It should not Create an Account with invalid data"""
+        response = self.client.post(
+            BASE_URL,
+            json={"name": "not enough data"},
+        )
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_400_BAD_REQUEST,
+        )
 
     def test_unsupported_media_type(self):
-        """It should not Create an Account when sending the wrong media type"""
+        """It should reject unsupported media type"""
         account = AccountFactory()
         response = self.client.post(
             BASE_URL,
             json=account.serialize(),
-            content_type="test/html"
+            content_type="text/html",
         )
-        self.assertEqual(response.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+        )
 
     # ADD YOUR TEST CASES HERE ...
