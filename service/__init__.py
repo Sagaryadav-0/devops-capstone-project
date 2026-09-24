@@ -14,10 +14,10 @@ from service.common import log_handlers
 app = Flask(__name__)
 app.config.from_object(config)
 
-# Configure security headers with Talisman
+# Configure security headers
 Talisman(app)
 
-# Import the routes After the Flask app is created
+# Import the routes after the Flask app is created
 # pylint: disable=wrong-import-position, cyclic-import, wrong-import-order
 from service import routes, models  # noqa: F401 E402
 
