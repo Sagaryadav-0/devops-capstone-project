@@ -9,6 +9,12 @@ RUN pip install --no-cache-dir --upgrade pip && \
 
 COPY . .
 
+# Create a non-root user
+RUN useradd -m appuser
+
+# Switch to the non-root user
+USER appuser
+
 ENV PORT=8080
 
 EXPOSE 8080
